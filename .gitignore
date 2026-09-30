@@ -1,0 +1,10 @@
+.vs/
+**/.vs/
+
+__MACOSX/
+.DS_Store
+
+*.exe
+*.obj
+*.pdb
+*.ilk

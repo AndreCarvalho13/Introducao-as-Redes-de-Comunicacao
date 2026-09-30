@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment (lib, "ws2_32.lib")
+
+#define SERV_HOST_ADDR "127.0.0.1"
+#define SERV_UDP_PORT 50000
+
+
+int main(int argc, char* argv[]) {
+	WSADATA wsa_data;
+	SOCKET socket_cliente;
+	struct sockaddr_in info_servidor;
+	int res;
+
+	// verifica se foi passada a mensagem a enviar
+	if (argc != 2) {
+		fprintf(stdout, "\nSintaxe:\nexecutavel <frase a enviar>\n\n");
+		exit(EXIT_FAILURE);
+	}
+
+	// nao e necessario em Berkeley (implementado em Linux/MacOS), mas e obrigatorio no Windows
+	res = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+	if (res != 0) {
+		fprintf(stderr, "\n<CLIENTE> Erro: Falha ao iniciar o winsock (%d)\n", res);
+		exit(EXIT_FAILURE);
+	}
+
+	// cria socket IPv4 do tipo datagrama
+	socket_cliente = socket(AF_INET, SOCK_DGRAM, 0);
+	if (socket_cliente == INVALID_SOCKET) {
+		fprintf(stderr, "\n<CLIENTE> Erro: Falha ao iniciar o socket (%d)\n", WSAGetLastError());
+		closesocket(socket_cliente);
+		WSACleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	// preenchimento da estrutura com os dados do servidor
+	memset(&info_servidor, 0, sizeof(info_servidor));	// preeenche toda a estrutura com 0
+	info_servidor.sin_family = AF_INET;					// IPv4
+	info_servidor.sin_port = htons(SERV_UDP_PORT);		// Porto do servidor
+	// info_servidor.sin_addr.s_addr = inet_addr(SERV_HOST_ADDR);	// IP do servidor
+	// considerado nao seguro: nao verifica se o IP esta correto
+	// usar antes:
+	res = inet_pton(AF_INET, SERV_HOST_ADDR, &info_servidor.sin_addr);	// IP do servidor
+	if (res != 1) {
+		fprintf(stderr, "\n<\n<CLIENTE> Erro: Endereco IP invalido (%d)\n", WSAGetLastError());
+		closesocket(socket_cliente);
+		WSACleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	// envia a mensagem passada por linha de comando para o servidor
+	res = sendto(socket_cliente, argv[1], (int)strlen(argv[1]), 0, (struct sockaddr*)&info_servidor, sizeof(info_servidor));
+	if(res == SOCKET_ERROR) {
+		fprintf(stderr, "\n<CLIENTE> Erro: Falha na transmissao (%d)\n", WSAGetLastError());
+		closesocket(socket_cliente);
+		WSACleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(stdout, "Mensagem enviada para %s:%d -> %s\n", SERV_HOST_ADDR, SERV_UDP_PORT, argv[1]);
+
+	closesocket(socket_cliente);
+	WSACleanup();
+	return(EXIT_SUCCESS);
+}
