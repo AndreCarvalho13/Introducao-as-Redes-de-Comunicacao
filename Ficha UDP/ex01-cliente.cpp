@@ -8,6 +8,7 @@
 
 #define SERV_HOST_ADDR "127.0.0.1"
 #define SERV_UDP_PORT 50000
+#define BUFFER_SIZE 1024 // tamanho maximo da mensagem a enviar ex2
 
 
 int main(int argc, char* argv[]) {
@@ -15,6 +16,9 @@ int main(int argc, char* argv[]) {
 	SOCKET socket_cliente;
 	struct sockaddr_in info_servidor;
 	int res;
+	// variavel para guardar o numero de bytes recebidos ex2
+	int bytes_recebidos;
+	char buffer[BUFFER_SIZE];
 
 	// verifica se foi passada a mensagem a enviar
 	if (argc != 2) {
@@ -63,6 +67,19 @@ int main(int argc, char* argv[]) {
 	}
 
 	fprintf(stdout, "Mensagem enviada para %s:%d -> %s\n", SERV_HOST_ADDR, SERV_UDP_PORT, argv[1]);
+
+	// aguarda pela rececao da resposta do servidor ex2
+	bytes_recebidos = recvfrom(socket_cliente, buffer, BUFFER_SIZE - 1, 0, NULL, NULL);
+	if (bytes_recebidos == SOCKET_ERROR) {
+		fprintf(stderr, "\n<CLIENTE> Erro: Falha na rececao (%d)\n", WSAGetLastError());
+		closesocket(socket_cliente);
+		WSACleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	buffer[bytes_recebidos] = '\0';	// garante terminacao da mensagem ex2
+	
+	fprintf(stdout, "Mensagem recebida do servidor -> %s\n", buffer); // resposta do servidor ex2
 
 	closesocket(socket_cliente);
 	WSACleanup();

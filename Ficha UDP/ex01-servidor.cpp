@@ -19,6 +19,9 @@ int main(void)
     int res, bytes_recebidos;
     char buffer[BUFFER_SIZE];
 
+	struct sockaddr_in info_cliente; // Estrutura para guardar os dados do cliente ex2
+	int tamanho_info_cliente;   // Variavel para guardar o tamanho da estrutura sockaddr_in do cliente ex2
+
     // nao e necessario em Berkeley (implementado em Linux/MacOS), mas e obrigatorio no Windows
     res = WSAStartup(MAKEWORD(2, 2), &wsa_data);
     if(res != 0) {
@@ -52,8 +55,10 @@ int main(void)
     printf("Servidor UDP a escuta no porto %d...\n", SERV_UDP_PORT);
 
     while (1) {
+
+		tamanho_info_cliente = sizeof(info_cliente); // Guarda o tamanho da estrutura sockaddr_in do cliente ex2
         // aguarda pela rececao
-        bytes_recebidos = recvfrom(socket_servidor, buffer, BUFFER_SIZE - 1, 0, NULL, NULL);
+		bytes_recebidos = recvfrom(socket_servidor, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr*)&info_cliente, &tamanho_info_cliente); //Alterei os ultimos dois parametros para receber o endereço do cliente ex2
 
         if (bytes_recebidos == SOCKET_ERROR || bytes_recebidos > BUFFER_SIZE) {
             fprintf(stderr, "\n<SERVIDOR> Erro: Falha na rececao (%d)\n", WSAGetLastError());
@@ -65,6 +70,18 @@ int main(void)
         buffer[bytes_recebidos] = '\0';     // garante terminacao da mensagem
         fprintf(stdout, "Mensagem recebida -> %s\n", buffer);
         fflush(stdout);
+
+		// Envia a mensagem de volta para o cliente ex2
+		res = sendto(socket_servidor, buffer, bytes_recebidos, 0, (struct sockaddr*)&info_cliente, tamanho_info_cliente);
+        if (res == SOCKET_ERROR) {
+			fprintf(stderr, "\n<SERVIDOR> Erro: Falha na transmissao (%d)\n", WSAGetLastError());
+			closesocket(socket_servidor);
+			WSACleanup();
+			exit(EXIT_FAILURE);
+        }
+            
+
+
     }
 
     closesocket(socket_servidor);
