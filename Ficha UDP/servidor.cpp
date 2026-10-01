@@ -22,6 +22,9 @@ int main(void)
 	struct sockaddr_in info_cliente; // Estrutura para guardar os dados do cliente ex2
 	int tamanho_info_cliente;   // Variavel para guardar o tamanho da estrutura sockaddr_in do cliente ex2
 
+	char ip_cliente[INET_ADDRSTRLEN]; // Variavel para guardar o endereco IP do cliente ex4
+
+
     // nao e necessario em Berkeley (implementado em Linux/MacOS), mas e obrigatorio no Windows
     res = WSAStartup(MAKEWORD(2, 2), &wsa_data);
     if(res != 0) {
@@ -68,7 +71,9 @@ int main(void)
         }
 
         buffer[bytes_recebidos] = '\0';     // garante terminacao da mensagem
-        fprintf(stdout, "Mensagem recebida -> %s\n", buffer);
+		inet_ntop(AF_INET, &info_cliente.sin_addr, ip_cliente, INET_ADDRSTRLEN); // Converte o endereço IP do cliente ex4 para string
+
+        fprintf(stdout, "Mensagem recebida de %s:%d -> %s\n",ip_cliente, ntohs(info_cliente.sin_port), buffer);
         fflush(stdout);
 
 		// Envia a mensagem de volta para o cliente ex2
