@@ -16,9 +16,11 @@ int main(int argc, char* argv[]) {
 	SOCKET socket_cliente;
 	struct sockaddr_in info_servidor;
 	int res;
-	// variavel para guardar o numero de bytes recebidos ex2
-	int bytes_recebidos;
+	int bytes_recebidos; // variavel para guardar o numero de bytes recebidos ex2
 	char buffer[BUFFER_SIZE];
+	struct sockaddr_in info_local; // Estrutura para guardar os dados do cliente ex3
+	int tamanho_info_local;   // Variavel para guardar o tamanho da estrutura sockaddr_in do cliente ex3
+
 
 	// verifica se foi passada a mensagem a enviar
 	if (argc != 2) {
@@ -67,6 +69,20 @@ int main(int argc, char* argv[]) {
 	}
 
 	fprintf(stdout, "Mensagem enviada para %s:%d -> %s\n", SERV_HOST_ADDR, SERV_UDP_PORT, argv[1]);
+
+	// preenchimento da estrutura com os dados do cliente ex3
+	tamanho_info_local = sizeof(info_local);
+
+	res = getsockname(socket_cliente, (struct sockaddr*)&info_local, &tamanho_info_local);
+
+	if (res == SOCKET_ERROR) {
+		fprintf(stderr, "\n<CLIENTE> Erro: Falha ao obter o endereco local (%d)\n", WSAGetLastError());
+		closesocket(socket_cliente);
+		WSACleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(stdout, "Endereco local do cliente ->%d\n", ntohs(info_local.sin_port));
 
 	// aguarda pela rececao da resposta do servidor ex2
 	bytes_recebidos = recvfrom(socket_cliente, buffer, BUFFER_SIZE - 1, 0, NULL, NULL);
