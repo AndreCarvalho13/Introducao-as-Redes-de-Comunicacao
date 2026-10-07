@@ -6,8 +6,8 @@
 #include <ws2tcpip.h>
 #pragma comment (lib, "ws2_32.lib")
 
-#define SERV_HOST_ADDR "127.0.0.1"
-#define SERV_UDP_PORT 50000
+// #define SERV_HOST_ADDR "127.0.0.1" coloquei em comentario para que seja preciso passar o IP do servidor por linha de comando ex5
+//#define SERV_UDP_PORT 50000 passar a porta do servidor por linha de comando ex5
 #define BUFFER_SIZE 1024 // tamanho maximo da mensagem a enviar ex2
 
 
@@ -21,10 +21,42 @@ int main(int argc, char* argv[]) {
 	struct sockaddr_in info_local; // Estrutura para guardar os dados do cliente ex3
 	int tamanho_info_local;   // Variavel para guardar o tamanho da estrutura sockaddr_in do cliente ex3
 
+	// Variaveis para guardar o IP, porta e mensagem a enviar para o servidor ex5
+	char* mensagem = NULL;
+	char* ip_servidor = NULL;
+	int porta_servidor = 0;
 
+	/*
 	// verifica se foi passada a mensagem a enviar
-	if (argc != 2) {
-		fprintf(stdout, "\nSintaxe:\nexecutavel <frase a enviar>\n\n");
+	if (argc != 7) {
+		fprintf(stdout, "\nSintaxe:\nexecutavel <IP do servidor> <porta do servidor> <frase a enviar>\n\n");
+		exit(EXIT_FAILURE);
+	}
+	*/
+	// guarda os argumentos passados por linha de comando ex5
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i],"-msg") == 0 && i + 1 < argc)
+		{
+			mensagem = argv[i + 1];
+		}
+		else if (strcmp(argv[i], "-ip") == 0 && i + 1 < argc)
+		{
+			ip_servidor = argv[i + 1];
+		}
+		else if (strcmp(argv[i], "-port") == 0 && i + 1 < argc)
+		{
+			porta_servidor = atoi(argv[i + 1]);
+		}
+		
+	}
+
+	if (mensagem == NULL || ip_servidor == NULL || porta_servidor == 0) {
+
+		fprintf(stderr,
+			"Sintaxe:\n"
+			"ex01-cliente.exe -msg \"mensagem\" -ip <IP> -port <porto>\n"
+		);
+
 		exit(EXIT_FAILURE);
 	}
 
@@ -47,11 +79,11 @@ int main(int argc, char* argv[]) {
 	// preenchimento da estrutura com os dados do servidor
 	memset(&info_servidor, 0, sizeof(info_servidor));	// preeenche toda a estrutura com 0
 	info_servidor.sin_family = AF_INET;					// IPv4
-	info_servidor.sin_port = htons(SERV_UDP_PORT);		// Porto do servidor
+	info_servidor.sin_port = htons(porta_servidor);		// Porto do servidor
 	// info_servidor.sin_addr.s_addr = inet_addr(SERV_HOST_ADDR);	// IP do servidor
 	// considerado nao seguro: nao verifica se o IP esta correto
 	// usar antes:
-	res = inet_pton(AF_INET, SERV_HOST_ADDR, &info_servidor.sin_addr);	// IP do servidor
+	res = inet_pton(AF_INET, ip_servidor, &info_servidor.sin_addr);
 	if (res != 1) {
 		fprintf(stderr, "\n<\n<CLIENTE> Erro: Endereco IP invalido (%d)\n", WSAGetLastError());
 		closesocket(socket_cliente);
@@ -60,7 +92,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// envia a mensagem passada por linha de comando para o servidor
-	res = sendto(socket_cliente, argv[1], (int)strlen(argv[1]), 0, (struct sockaddr*)&info_servidor, sizeof(info_servidor));
+	res = sendto(socket_cliente, mensagem, (int)strlen(mensagem), 0, (struct sockaddr*)&info_servidor, sizeof(info_servidor));
 	if(res == SOCKET_ERROR) {
 		fprintf(stderr, "\n<CLIENTE> Erro: Falha na transmissao (%d)\n", WSAGetLastError());
 		closesocket(socket_cliente);
@@ -68,7 +100,7 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	fprintf(stdout, "Mensagem enviada para %s:%d -> %s\n", SERV_HOST_ADDR, SERV_UDP_PORT, argv[1]);
+	fprintf(stdout, "Mensagem enviada para %s:%d -> %s\n", ip_servidor, porta_servidor, mensagem);
 
 	// preenchimento da estrutura com os dados do cliente ex3
 	tamanho_info_local = sizeof(info_local);
