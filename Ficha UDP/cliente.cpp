@@ -20,6 +20,8 @@ int main(int argc, char* argv[]) {
 	char buffer[BUFFER_SIZE];
 	struct sockaddr_in info_local; // Estrutura para guardar os dados do cliente ex3
 	int tamanho_info_local;   // Variavel para guardar o tamanho da estrutura sockaddr_in do cliente ex3
+	struct sockaddr_in info_origem; // Estrutura para guardar os dados da origem ex6
+	int tamanho_info_origem;   // Variavel para guardar o tamanho da estrutura sockaddr_in da origem ex6
 
 	// Variaveis para guardar o IP, porta e mensagem a enviar para o servidor ex5
 	char* mensagem = NULL;
@@ -117,9 +119,19 @@ int main(int argc, char* argv[]) {
 	fprintf(stdout, "Endereco local do cliente ->%d\n", ntohs(info_local.sin_port));
 
 	// aguarda pela rececao da resposta do servidor ex2
-	bytes_recebidos = recvfrom(socket_cliente, buffer, BUFFER_SIZE - 1, 0, NULL, NULL);
+	bytes_recebidos = recvfrom(socket_cliente, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr*)&info_origem, &tamanho_info_origem);
 	if (bytes_recebidos == SOCKET_ERROR) {
 		fprintf(stderr, "\n<CLIENTE> Erro: Falha na rececao (%d)\n", WSAGetLastError());
+		closesocket(socket_cliente);
+		WSACleanup();
+		exit(EXIT_FAILURE);
+	}
+
+	if (info_origem.sin_addr.s_addr != info_servidor.sin_addr.s_addr ||
+		info_origem.sin_port != info_servidor.sin_port)
+	{
+		fprintf(stderr, "Erro: resposta recebida de uma origem diferente do servidor.\n");
+
 		closesocket(socket_cliente);
 		WSACleanup();
 		exit(EXIT_FAILURE);
