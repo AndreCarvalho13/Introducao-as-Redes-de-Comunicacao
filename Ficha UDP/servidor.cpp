@@ -73,7 +73,7 @@ int main(void)
         buffer[bytes_recebidos] = '\0';     // garante terminacao da mensagem
 		inet_ntop(AF_INET, &info_cliente.sin_addr, ip_cliente, INET_ADDRSTRLEN); // Converte o endereço IP do cliente ex4 para string
 
-        fprintf(stdout, "Mensagem recebida de %s:%d -> %s\n",ip_cliente, ntohs(info_cliente.sin_port), buffer);
+		fprintf(stdout, "Mensagem recebida de %s:%d -> %s\n", ip_cliente, ntohs(info_cliente.sin_port), buffer); // Atualiza para enviar o endereço IP do cliente ex4 e a porta do cliente ex2
         fflush(stdout);
 
 		// Envia a mensagem de volta para o cliente ex2
